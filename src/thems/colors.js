@@ -1,13 +1,9 @@
 export const colors={
     black:'#070724',
     white:'#fff',
-    darkGrey:'#838391',
+    grey:'#ccc',
     lightGreen:'#419EBB',
-    orange:'#EDA249',
+    yellow:'#F5D949',
     purple:'#6f2ed6',
-    darkOrange:'#D14C32',
-    red:'#D83A3A',
-    lightRed:'#CD5120',
-    green:'#1ec2a4',
     blue:'#2d68f0'
 }

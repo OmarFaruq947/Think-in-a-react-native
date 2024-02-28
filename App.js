@@ -1,45 +1,87 @@
-import { DarkTheme, NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useFonts } from "expo-font";
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text } from "react-native";
-import Home from "./src/screens/Home";
-import details from "./src/screens/details";
+import { initializeApp } from "firebase/app";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { React, useEffect, useState } from "react";
+import FlashMessage from "react-native-flash-message";
+import Create from "./src/screens/create";
+import Edit from "./src/screens/edit";
+import Home from "./src/screens/home";
+import SignIn from "./src/screens/signIn";
+import SignUp from "./src/screens/signUp";
 import { colors } from "./src/thems/colors";
+
+//firebase start
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBw1eLqrdtihEGJVptDgcu7d8BCy41KZZk",
+  authDomain: "native-authentication-b44b5.firebaseapp.com",
+  projectId: "native-authentication-b44b5",
+  storageBucket: "native-authentication-b44b5.appspot.com",
+  messagingSenderId: "586876853183",
+  appId: "1:586876853183:web:22f254fa16b8d9ccb5df0a",
+};
+
+// Initialize Firebase
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+//firebase end
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [loaded] = useFonts({
-    "Antonio-Medium": require("./assets/fonts/Antonio-Medium.ttf"),
-    "Spartan-Bold": require("./assets/fonts/Spartan-Bold.ttf"),
-    "Spartan-Regular": require("./assets/fonts/Spartan-Regular.ttf"),
-  });
+  const [loading, setLoading] = useState(false); // loading function
+  const [user, setUser] = useState(null); // not authenticated
 
-  if (!loaded) {
-    return <Text> font is Loading...</Text>;
+  useEffect(() => {
+    const authSubscription = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        setLoading(false);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+    return authSubscription;
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItem: "center" }}>
+        <ActivityIndicator color={colors.yellow} />
+      </View>
+    );
   }
 
   return (
-    <>
-    <NavigationContainer theme={DarkTheme}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Home" component={Home} />
-        <Stack.Screen name="Details" component={details} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <NavigationContainer>
+      <Stack.Navigator>
+        {user ? (
+          <>
+            {/* <Stack.Screen name="Home" component={Home} /> */}
+            <Stack.Screen name="Home">
+              {(props) => <Home {...props} user={user} />}
+            </Stack.Screen>
+            <Stack.Screen name="Edit">
+              {(props) => <Edit {...props} user={user} />}
+            </Stack.Screen>
 
-    <StatusBar style='light'/>
-    </>
-    
+            <Stack.Screen name="Create">
+              {(props) => <Create {...props} user={user} />}
+            </Stack.Screen>
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="SignIn" component={SignIn} />
+            <Stack.Screen name="SignUp" component={SignUp} />
+            {/* options={{headerShown:false}} */}
+          </>
+        )}
+      </Stack.Navigator>
+      <FlashMessage position="top" />
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.black,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
